@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNRaf Connect - GT/LOGI 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .unraf-blue { background-color: #005492; }
+        .card { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 12px; border-left: 5px solid #005492; }
+        .hidden { display: none !important; }
+        .active-tab { color: #005492; font-weight: bold; border-bottom: 2px solid #005492; }
+        /* Logo con CSS para que siempre se vea */
+        .logo-unraf {
+            width: 40px; height: 40px; background: white; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; color: #005492; font-size: 10px; text-align: center; line-height: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 pb-24">
+
+    <div id="view-login" class="fixed inset-0 z-[100] bg-gray-50 flex flex-col items-center justify-center p-6">
+        <div class="w-full max-w-sm bg-white p-8 rounded-2xl shadow-xl border-t-4 border-[#005492]">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 mx-auto mb-4 unraf-blue rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg">UNRaf</div>
+                <h2 class="text-2xl font-bold text-gray-800">UNRaf Connect</h2>
+                <p class="text-gray-500 text-sm italic">Gestión de Aulas y Horarios</p>
+            </div>
+            <input type="text" id="userInput" class="w-full p-3 mb-4 rounded-lg border-2 border-gray-100 outline-none focus:border-blue-500" placeholder="Usuario (alumno/docente)">
+            <input type="password" id="passInput" class="w-full p-3 mb-6 rounded-lg border-2 border-gray-100 outline-none focus:border-blue-500" placeholder="Contraseña">
+            <button onclick="intentarLogin()" class="w-full unraf-blue text-white p-4 rounded-xl font-bold uppercase shadow-md active:scale-95 transition-all">Ingresar</button>
+        </div>
+    </div>
+
+    <div id="app-content" class="hidden">
+        <header class="unraf-blue text-white p-4 sticky top-0 z-50 shadow-md flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="logo-unraf shadow-inner">UNRaf<br>CON</div>
+                <div>
+                    <h1 class="text-sm font-black leading-none">UNRaf Connect</h1>
+                    <p class="text-[9px] opacity-80 uppercase tracking-tighter">Gestión Académica</p>
+                </div>
+            </div>
+            <span id="role-tag" class="text-[10px] bg-white text-blue-900 px-2 py-1 rounded-full font-black"></span>
+        </header>
+
+        <main class="p-4" id="main-view">
+            <div id="muro-section" class="mb-6">
+                 <h2 class="text-[10px] font-bold text-gray-400 mb-2 uppercase">📢 Avisos Docentes</h2>
+                 <div id="muro-contenedor" class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                    <p id="texto-aviso" class="text-sm text-gray-700 italic">Bienvenido al ciclo 2026.</p>
+                 </div>
+            </div>
+
+            <div id="materias-section">
+                <select id="filtroAño" onchange="renderizarMaterias()" class="w-full p-3 mb-4 rounded-lg border-2 border-blue-100 font-bold text-gray-700 outline-none">
+                    <option value="1">1er Año (GT/LOGI)</option>
+                    <option value="2">2do Año (GT/LOGI)</option>
+                    <option value="idiomas">Idiomas</option>
+                </select>
+                <div id="contenedor-clases"></div>
+            </div>
+        </main>
+
+        <nav class="fixed bottom-0 w-full bg-white border-t flex justify-around p-4 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+            <button onclick="cambiarSeccion('mi-dia')" class="nav-item text-center active-tab">
+                <p class="text-xl">📅</p><p class="text-[9px] uppercase font-bold">Horarios</p>
+            </button>
+            <button onclick="cambiarSeccion('aulas')" class="nav-item text-center">
+                <p class="text-xl">🏛️</p><p class="text-[9px] uppercase font-bold">Aulas</p>
+            </button>
+            <button onclick="cerrarSesion()" class="nav-item text-center text-red-400">
+                <p class="text-xl">🚪</p><p class="text-[9px] uppercase font-bold">Salir</p>
+            </button>
+        </nav>
+    </div>
+
+    <script>
+        // ... (Aquí va la lógica de materias y login que ya teníamos)
+        function intentarLogin() {
+            const u = document.getElementById('userInput').value.toLowerCase();
+            const p = document.getElementById('passInput').value;
+            if((u==='alumno' && p==='123') || (u==='docente' && p==='unraf2026')) {
+                document.getElementById('view-login').classList.add('hidden');
+                document.getElementById('app-content').classList.remove('hidden');
+                document.getElementById('role-tag').innerText = u.toUpperCase();
+                renderizarMaterias();
+            } else { alert("Datos incorrectos"); }
+        }
+
+        const db = {
+            "1": [{m:"Taller de Estadística", h:"Lun 18-22", a:"Aula 9"}, {m:"Microeconomía", h:"Mié 20-23", a:"Aula 9"}],
+            "2": [{m:"Matemática II", h:"Lun 18-22", a:"Aula 6B"}, {m:"Informática I", h:"Jue 18-22", a:"Lab 4"}],
+            "idiomas": [{m:"Portugués", h:"Mar/Jue 16-18", a:"Sede Roca"}]
+        };
+
+        function renderizarMaterias() {
+            const año = document.getElementById('filtroAño').value;
+            let html = "";
+            db[año].forEach(x => {
+                html += `<div class="card"><h3 class="font-bold text-blue-900">${x.m}</h3><p class="text-xs text-gray-500">${x.h} | ${x.a}</p></div>`;
+            });
+            document.getElementById('contenedor-clases').innerHTML = html;
+        }
+
+        function cerrarSesion() { location.reload(); }
+    </script>
+</body>
+</html>
